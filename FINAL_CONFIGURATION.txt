@@ -1,0 +1,197 @@
+================================================================================
+✅ FINAL EXPERIMENT CONFIGURATION
+================================================================================
+
+ALL EXPERIMENTS NOW CONFIGURED WITH:
+================================================================================
+
+1. SEEDS SET FOR REPRODUCIBILITY ✓
+   - random.seed(42)
+   - np.random.seed(42)
+   - torch.manual_seed(42)
+   - torch.cuda.manual_seed_all(42)
+
+2. BATCH SIZE = 2000 ✓
+   - All experiments use batch_size=2000
+
+3. EPOCHS = 1000 ✓
+   - All experiments train for 1000 epochs
+
+4. CUDA DEVICES ASSIGNED ✓
+   - train_on_D.py:       CUDA:0
+   - exp_train_on_D_m.py: CUDA:1
+   - plot_A_heatmap.py:   CUDA:2
+   - vanish_grad.py:      CUDA:3 (NEW!)
+
+5. RESULTS DIRECTORIES ✓
+   - results/train_on_D/
+   - results/exp_train_on_D_m/
+   - results/plot_A_heatmap/
+   - results/vanish_grad/ (NEW!)
+
+6. NEW EXPERIMENT: vanish_grad.py ✓
+   - Tests chain_size=4
+   - Varies starting_position from 0 to 2 (chain_size-2)
+   - Uses 10K validation samples
+   - Saves pickle with all results
+   - Plots all test accuracies on same graph
+   - Labels start from 1 (position 0 → labeled "Starting Position 1")
+
+7. INDIVIDUAL PLOTS FOR EACH RUN ✓
+   - Saved in: {RESULTS_DIR}/run_losses/
+   - val_acc_{run_id}.png
+   - val_loss_{run_id}.png
+
+================================================================================
+FILE-BY-FILE BREAKDOWN
+================================================================================
+
+train_on_D.py (Experiment 1)
+----------------------------
+• CUDA Device: 0
+• Seeds: Set
+• Batch size: 2000
+• Epochs: 1000
+• Results dir: results/train_on_D/
+• Runs 3 trainings (chain_size = 10, 20, 30)
+• Outputs:
+  - results/train_on_D/results_train_on_D.csv
+  - results/train_on_D/training_curves_chain_{10,20,30}.png
+  - results/train_on_D/run_losses/val_acc_chain_{10,20,30}.png
+  - results/train_on_D/run_losses/val_loss_chain_{10,20,30}.png
+
+exp_train_on_D_m.py (Experiment 2)
+-----------------------------------
+• CUDA Device: 1
+• Seeds: Set
+• Batch size: 2000
+• Epochs: 1000
+• Results dir: results/exp_train_on_D_m/
+• Trains once on chain_size=4, tests on [4, 8, 12]
+• Outputs:
+  - results/exp_train_on_D_m/results_train_on_D_m.csv
+  - results/exp_train_on_D_m/training_curves_train_chain_4.png
+  - results/exp_train_on_D_m/run_losses/val_acc_train_chain_4.png
+  - results/exp_train_on_D_m/run_losses/val_loss_train_chain_4.png
+
+plot_A_heatmap.py (Experiment 3)
+---------------------------------
+• CUDA Device: 2
+• Seeds: Set
+• Batch size: 2000
+• Epochs: 1000
+• Results dir: results/plot_A_heatmap/
+• Trains on chain_size=6
+• Outputs:
+  - results/plot_A_heatmap/A_matrix_heatmap.png
+  - results/plot_A_heatmap/A_matrix_comparison.png
+  - results/plot_A_heatmap/training_curves_chain_6.png
+  - results/plot_A_heatmap/run_losses/val_acc_chain_6.png
+  - results/plot_A_heatmap/run_losses/val_loss_chain_6.png
+
+vanish_grad.py (Experiment 4) - NEW!
+-------------------------------------
+• CUDA Device: 3
+• Seeds: Set
+• Batch size: 2000
+• Epochs: 1000
+• Validation samples: 10,000 (special for this exp)
+• Results dir: results/vanish_grad/
+• Trains 3 models with starting_position=[0, 1, 2]
+• Outputs:
+  - results/vanish_grad/all_results.pkl (loadable pickle with ALL data)
+  - results/vanish_grad/combined_test_accuracy.png (all curves on one plot)
+  - results/vanish_grad/training_curves_start_{1,2,3}.png
+  - results/vanish_grad/run_losses/val_acc_start_{1,2,3}.png
+  - results/vanish_grad/run_losses/val_loss_start_{1,2,3}.png
+
+================================================================================
+DIRECTORY STRUCTURE
+================================================================================
+
+new_repo_code/
+├── train_on_D.py          (CUDA:0)
+├── exp_train_on_D_m.py    (CUDA:1)
+├── plot_A_heatmap.py      (CUDA:2)
+├── vanish_grad.py         (CUDA:3) ← NEW!
+├── run_exp_util.py
+└── results/               ← All results go here
+    ├── train_on_D/
+    │   ├── results_train_on_D.csv
+    │   ├── training_curves_chain_*.png
+    │   └── run_losses/
+    │       ├── val_acc_chain_*.png
+    │       └── val_loss_chain_*.png
+    ├── exp_train_on_D_m/
+    │   ├── results_train_on_D_m.csv
+    │   ├── training_curves_train_chain_4.png
+    │   └── run_losses/
+    │       ├── val_acc_train_chain_4.png
+    │       └── val_loss_train_chain_4.png
+    ├── plot_A_heatmap/
+    │   ├── A_matrix_heatmap.png
+    │   ├── A_matrix_comparison.png
+    │   ├── training_curves_chain_6.png
+    │   └── run_losses/
+    │       ├── val_acc_chain_6.png
+    │       └── val_loss_chain_6.png
+    └── vanish_grad/         ← NEW!
+        ├── all_results.pkl  (loadable with pickle.load())
+        ├── combined_test_accuracy.png
+        ├── training_curves_start_*.png
+        └── run_losses/
+            ├── val_acc_start_*.png
+            └── val_loss_start_*.png
+
+================================================================================
+RUN_LOSSES DIRECTORY PURPOSE
+================================================================================
+
+The run_losses/ subdirectories contain simple 2-panel plots:
+  1. Validation Accuracy over epochs
+  2. Validation Loss over epochs
+
+Purpose: Quick check to see if training completed and converged
+  - If curves are still changing → need more epochs
+  - If curves are flat → training converged
+
+================================================================================
+VANISH_GRAD.PY DETAILS
+================================================================================
+
+Special features:
+  • Tests different starting positions in the permutation
+  • starting_position=0 means perm[0] is source
+  • starting_position=1 means perm[1] is source
+  • starting_position=2 means perm[2] is source
+  
+  • Labels in plots: "Starting Position 1, 2, 3" (offset by +1)
+  
+  • 10K validation samples (10x more than other experiments)
+  
+  • Pickle contains full training history for all runs:
+    all_results[starting_pos] = {
+        'train_history': [...],
+        'val_history': [...],
+        'starting_pos': starting_pos
+    }
+
+================================================================================
+TO RUN ALL EXPERIMENTS (IN PARALLEL)
+================================================================================
+
+# Terminal 1 (CUDA:0)
+python train_on_D.py
+
+# Terminal 2 (CUDA:1)
+python exp_train_on_D_m.py
+
+# Terminal 3 (CUDA:2)
+python plot_A_heatmap.py
+
+# Terminal 4 (CUDA:3)
+python vanish_grad.py
+
+All 4 can run simultaneously on different GPUs!
+
+================================================================================
