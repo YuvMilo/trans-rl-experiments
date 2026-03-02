@@ -1,0 +1,4 @@
+chain_size,train_accuracy,test_accuracy,chain_traverse
+12,100.0,100.0,99.9
+8,100.0,100.0,100.0
+4,100.0,100.0,100.0
