@@ -71,16 +71,6 @@ python theoretically_inspired/exp_vanish_grad.py --softmax
 Output: `result/theoretically_inspired/exp_vanish_grad_linear/` and
 `result/theoretically_inspired/exp_vanish_grad/`
 
----
-
-## Additional Options
-
-| Flag | Description |
-|------|-------------|
-| `--linear` | Use linear attention (default for all experiments) |
-| `--softmax` | Use softmax attention |
-| `--verbose` | Save per-seed results and plots in addition to the aggregated CSV (available for `exp_train_on_D` and `exp_train_on_D_m`) |
-
 ## Directory Structure
 
 ```
