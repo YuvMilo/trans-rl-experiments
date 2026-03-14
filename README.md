@@ -3,7 +3,7 @@ Code for reproducing the experiments in the paper "Outcome-Based RL Provably Lea
 ## Setup
 
 ```bash
-conda create -n trans_rl python=3.9
+conda create -n trans_rl python=3.9.23
 conda activate trans_rl
 pip install -r requirements.txt
 pip install flash-attn --no-build-isolation

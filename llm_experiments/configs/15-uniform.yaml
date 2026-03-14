@@ -8,7 +8,7 @@ torch_dtype: bfloat16
 attn_implementation: flash_attention_2
 bf16: true
 tf32: true
-output_dir: runs/qwen-2.5-3b-15-uniform_seed_42_full_samples
+output_dir: runs/qwen-2.5-3b-15-uniform
 
 # Dataset arguments
 dataset_samples: 50000
