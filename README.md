@@ -156,7 +156,7 @@ python llm_experiments/evaluate_model.py \
     --training_min_path 1   \
     --training_max_path 14   \
     --samples_per_config 1000 \
-    --save samples
+    --save_samples
 ```
 
 Output: `evaluation_results/`
