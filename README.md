@@ -217,6 +217,8 @@ python llm_experiments/analyze_sliding_accuracy_compare.py \
 │   ├── dag_dataset_simplified.py    # Dataset generation
 │   ├── evaluate_model.py            # Model evaluation
 │   ├── analyze_sliding_accuracy_compare.py  # Plotting training curves
+|   |── graphs                       # graph outputs
+|   |   |── comparison.png
 │   ├── configs/                     # Pre-configured experiments
 │   │   ├── 5-uniform.yaml
 │   │   ├── 10-uniform.yaml
