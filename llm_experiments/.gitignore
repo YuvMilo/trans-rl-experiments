@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Training outputs: checkpoints, tensorboard events, model cards
+runs/
+
+# Completion logs written during training (inputs to the analysis scripts)
+completion_samples/
+
+# Evaluation outputs
+evaluation_results/
+
+# Run logs and generated figures
+logs/
+figures/

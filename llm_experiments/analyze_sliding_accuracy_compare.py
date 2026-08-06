@@ -88,7 +88,7 @@ except ImportError as e:
     np = DummyNumpy()
 
 # Maximum finetuning steps for X-axis
-MAX_FINETUNING_STEPS = 600
+MAX_FINETUNING_STEPS = 800
 
 # Default smoothing window size
 DEFAULT_SMOOTHING_WINDOW = 20
@@ -159,7 +159,7 @@ def setup_plot_style():
         'legend.framealpha': 0.95,
         'legend.edgecolor': '#CCCCCC',
         'legend.fontsize': 16,
-        'legend.loc': 'best',
+        'legend.loc': 'lower right',
         'lines.linewidth': 2.5,
         'lines.antialiased': True,
         'font.family': 'sans-serif',
@@ -175,155 +175,139 @@ COLORS = {
 }
 
 
-def parse_equations_input(input_str: str) -> dict:
+try:
+    import networkx as nx
+    NX_AVAILABLE = True
+except ImportError:
+    NX_AVAILABLE = False
+
+
+def parse_equation_graph(equation_input: str):
     """
-    Parse equation input string to extract edges, constants, and target.
-    
-    Args:
-        input_str: String like "x_1 = 5. x_2 = x_1 + 3. Find x_2"
-        
+    Parse an equation string and build the dependency graph.
+
+    Handles both old chain format (``x_v = x_u + c``) and new polynomial
+    format (``x_v = 2 * x_u^2 * x_w + 3 * x_w - 7``).
+
+    When a variable is defined both as a root constant *and* via a dependency
+    equation, the root assignment takes precedence.
+
     Returns:
-        Dictionary with 'target', 'edges', 'constants', 'nodes' keys
+        (graph, root_nodes, target_node) or (None, set(), -1) on failure.
     """
+    if not NX_AVAILABLE:
+        return None, set(), -1
+
+    target_match = re.search(r'Find x_(\d+)', equation_input)
+    if not target_match:
+        return None, set(), -1
+    target_node = int(target_match.group(1))
+
+    g = nx.DiGraph()
+    root_nodes = set()
+
+    parts = equation_input.split('.')
+    for part in parts:
+        part = part.strip()
+        if not part or part.startswith('Find'):
+            continue
+        eq_match = re.match(r'x_(\d+)\s*=\s*(.*)', part)
+        if not eq_match:
+            continue
+        lhs = int(eq_match.group(1))
+        rhs = eq_match.group(2).strip()
+        if not re.search(r'x_\d+', rhs):
+            root_nodes.add(lhs)
+            g.add_node(lhs)
+
+    for part in parts:
+        part = part.strip()
+        if not part or part.startswith('Find'):
+            continue
+        eq_match = re.match(r'x_(\d+)\s*=\s*(.*)', part)
+        if not eq_match:
+            continue
+        lhs = int(eq_match.group(1))
+        rhs = eq_match.group(2).strip()
+        rhs_vars = set(int(v) for v in re.findall(r'x_(\d+)', rhs))
+        if rhs_vars and lhs not in root_nodes:
+            g.add_node(lhs)
+            for rv in rhs_vars:
+                g.add_node(rv)
+                g.add_edge(rv, lhs)
+
+    if not root_nodes:
+        return None, set(), -1
+    return g, root_nodes, target_node
+
+
+def calculate_num_ancestors(input_str: str) -> int:
+    """
+    Count the number of ancestor variables of the target (including the target).
+
+    This is the primary hardness metric: how many variables must be resolved
+    to compute the final answer.
+
+    Returns:
+        Number of ancestor nodes (including target), or -1 on failure.
+    """
+    g, root_nodes, target_node = parse_equation_graph(input_str)
+    if g is None:
+        return -1
     try:
-        # Extract equations part (before "Find")
-        m = re.search(r'^(.*?)(?:Find\s+x_\d+)', input_str, flags=re.S)
-        if not m:
-            return None
-        eq_str = m.group(1).strip()
-        
-        # Extract target variable
-        m_target = re.search(r'Find\s+(x_\d+)', input_str)
-        if not m_target:
-            return None
-        target_var = m_target.group(1)
-        
-        # Split equations
-        eq_tokens = [e.strip() for e in eq_str.split('.') if e.strip()]
-        
-        edges = []
-        constants = set()
-        nodes = set()
-        
-        for eq in eq_tokens:
-            m_eq = re.match(r'(x_\d+)\s*=\s*(.+)$', eq)
-            if not m_eq:
-                continue
-            lhs = m_eq.group(1)
-            rhs = m_eq.group(2).strip()
-            nodes.add(lhs)
-            
-            # Check if it's a constant assignment
-            if re.fullmatch(r'-?\d+', rhs):
-                constants.add(lhs)
-                continue
-            
-            # Check if it's an equation with a variable (e.g., x_1 + 3 or x_1 - 5)
-            m_rhs_var = re.match(r'(x_\d+)\s*[+\-]\s*-?\d+', rhs)
-            if not m_rhs_var:
-                continue
-            
-            rhs_var = m_rhs_var.group(1)
-            nodes.add(rhs_var)
-            # Edge goes from dependency (rhs_var) to dependent (lhs)
-            edges.append((rhs_var, lhs))
-        
-        return {
-            "target": target_var,
-            "edges": edges,
-            "constants": constants,
-            "nodes": nodes,
-        }
-    except Exception:
-        return None
-
-
-def shortest_path_length(adj: dict, start: str, target: str) -> int:
-    """
-    Calculate shortest directed-path length from start to target using BFS.
-    
-    Args:
-        adj: Adjacency list (dict mapping node to list of neighbors)
-        start: Starting node
-        target: Target node
-        
-    Returns:
-        Shortest path length, or None if unreachable
-    """
-    from collections import deque
-    
-    if start == target:
-        return 0
-    q = deque([(start, 0)])
-    visited = {start}
-    while q:
-        u, d = q.popleft()
-        for v in adj.get(u, []):
-            if v in visited:
-                continue
-            if v == target:
-                return d + 1
-            visited.add(v)
-            q.append((v, d + 1))
-    return None
-
-
-def calculate_walk_length(input_str: str, target: str) -> int:
-    """
-    Calculate the walk length (reasoning depth) for a problem.
-    This is the shortest path from any constant to the target variable.
-    
-    Args:
-        input_str: Equation input string
-        target: Target variable (unused, extracted from input_str)
-        
-    Returns:
-        Walk length (number of steps) or -1 if cannot calculate
-    """
-    try:
-        parsed = parse_equations_input(input_str)
-        if not parsed:
-            return -1
-        
-        target_var = parsed["target"]
-        edges = parsed["edges"]
-        constants = parsed["constants"]
-        
-        # Build adjacency graph
-        adj = {}
-        for u, v in edges:
-            if u not in adj:
-                adj[u] = []
-            adj[u].append(v)
-        
-        # Find shortest path from any constant to target
-        min_distance = None
-        for const in constants:
-            d = shortest_path_length(adj, const, target_var)
-            if d is not None:
-                if min_distance is None or d < min_distance:
-                    min_distance = d
-        
-        return min_distance if min_distance is not None else -1
-    except Exception:
+        return len(nx.ancestors(g, target_node) | {target_node})
+    except nx.NetworkXError:
         return -1
 
 
-def filter_samples_by_path_length(samples: List[Dict[str, str]], path_lengths: List[int]) -> List[Dict[str, str]]:
+def filter_samples_by_num_ancestors(
+    samples: List[Dict[str, str]], allowed_counts: List[int],
+) -> List[Dict[str, str]]:
     """
-    Filter samples to only include those with specified path lengths.
-    
-    Args:
-        samples: List of sample dictionaries
-        path_lengths: List of allowed path lengths
-        
-    Returns:
-        Filtered list of samples
+    Keep only samples whose ancestor-subgraph size is in *allowed_counts*.
     """
     filtered = []
     for sample in samples:
-        walk_length = calculate_walk_length(sample['input'], sample['target'])
-        if walk_length in path_lengths:
+        n = calculate_num_ancestors(sample['input'])
+        if n in allowed_counts:
+            filtered.append(sample)
+    return filtered
+
+
+def calculate_ancestor_depth(input_str: str) -> int:
+    """
+    Compute the depth of the ancestor subgraph of the target = the length of
+    the longest path that ends at the target node.
+
+    Depth is measured in number of edges, so a target that is itself a root
+    constant has depth 0.
+
+    Returns:
+        Depth of the longest path ending at the target, or -1 on failure.
+    """
+    g, _root_nodes, target_node = parse_equation_graph(input_str)
+    if g is None:
+        return -1
+    try:
+        ancestor_nodes = nx.ancestors(g, target_node) | {target_node}
+        sub = g.subgraph(ancestor_nodes)
+        # In the induced ancestor subgraph the target is the unique sink, so
+        # the longest path in the DAG necessarily ends at the target.
+        return nx.dag_longest_path_length(sub)
+    except (nx.NetworkXError, nx.NetworkXUnfeasible):
+        return -1
+
+
+def filter_samples_by_ancestor_depth(
+    samples: List[Dict[str, str]], allowed_depths: List[int],
+) -> List[Dict[str, str]]:
+    """
+    Keep only samples whose ancestor-subgraph depth is in *allowed_depths*.
+    """
+    filtered = []
+    for sample in samples:
+        d = calculate_ancestor_depth(sample['input'])
+        if d in allowed_depths:
             filtered.append(sample)
     return filtered
 
@@ -452,7 +436,8 @@ def plot_comparison(
     window_size: int, output_path: str = None,
     x_label: str = None, y_label: str = None, title: str = None,
     smoothing_window: int = DEFAULT_SMOOTHING_WINDOW,
-    raw_smoothing_window: int = 1):
+    raw_smoothing_window: int = 1,
+    show_legend: bool = True):
     """
     Plot two accuracy curves on the same graph for comparison.
     Shows both raw (semi-transparent) and smoothed (solid) lines.
@@ -469,7 +454,7 @@ def plot_comparison(
     
     setup_plot_style()
     
-    # Scale x-axis to finetuning steps (0-600)
+    # Scale x-axis to finetuning steps (0-800)
     scaled_centers1 = scale_to_finetuning_steps(window_centers1, total_samples1)
     scaled_centers2 = scale_to_finetuning_steps(window_centers2, total_samples2)
     raw_scaled_centers1 = scale_to_finetuning_steps(raw_window_centers1, total_samples1)
@@ -524,7 +509,7 @@ def plot_comparison(
     ax.set_ylabel(y_label or 'Accuracy', fontsize=20, fontweight='medium')
     ax.set_title(title or f'Accuracy Comparison (window={window_size})', fontsize=24, fontweight='bold', pad=18)
     
-    # Set X-axis limits to 0-600
+    # Set X-axis limits to 0-800
     ax.set_xlim(0, MAX_FINETUNING_STEPS)
     ax.set_ylim(0, 105)
     
@@ -542,7 +527,8 @@ def plot_comparison(
     ax.grid(True, which='minor', linewidth=0.4, alpha=0.4)
     
     # Legend
-    ax.legend(loc='center right', fontsize=24, framealpha=0.95)
+    if show_legend:
+        ax.legend(loc='lower right', fontsize=24, framealpha=0.95)
     
     plt.tight_layout()
     
@@ -601,8 +587,8 @@ def main():
                        help="Output file path for plot (optional)")
     parser.add_argument("--no-plot", action="store_true", 
                        help="Skip plotting and only show statistics")
-    parser.add_argument("--max-steps", type=int, default=600,
-                       help="Maximum finetuning steps for X-axis (default: 600)")
+    parser.add_argument("--max-steps", type=int, default=800,
+                       help="Maximum finetuning steps for X-axis (default: 800)")
     parser.add_argument("--x-label", type=str, default=None,
                        help="Custom X-axis label (default: 'Finetuning Steps')")
     parser.add_argument("--y-label", type=str, default=None,
@@ -617,10 +603,21 @@ def main():
                        help="Label for first file in legend (default: filename)")
     parser.add_argument("--label2", type=str, default=None,
                        help="Label for second file in legend (default: filename)")
+    parser.add_argument("--no-legend", action="store_true",
+                       help="Hide the plot legend")
     parser.add_argument("--strict-format", action="store_true",
                        help="Only count answers as correct if format is also valid (<think>...</think>\\n<answer>...</answer>)")
-    parser.add_argument("--path-lengths", type=str, default=None,
-                       help="Comma-separated list of path lengths to include (e.g., '3,4,5'). If not specified, all samples are included.")
+    filter_group = parser.add_mutually_exclusive_group()
+    filter_group.add_argument("--num-ancestors", type=str, default=None,
+                       help="Comma-separated list of ancestor-subgraph sizes to include (e.g., '3,5,8'). "
+                            "Counts all variables needed to compute the target. Requires networkx. "
+                            "Mutually exclusive with --ancestor-depth.")
+    filter_group.add_argument("--path-lengths", type=str, default=None,
+                       help="Deprecated alias for --num-ancestors (kept for backward compatibility).")
+    filter_group.add_argument("--ancestor-depth", type=str, default=None,
+                       help="Comma-separated list of ancestor-subgraph depths to include (e.g., '2,3,4'). "
+                            "Depth = number of edges in the longest path that ends at the target. "
+                            "Requires networkx. Mutually exclusive with --num-ancestors.")
     
     args = parser.parse_args()
     
@@ -641,15 +638,33 @@ def main():
     label2 = args.label2 or Path(args.file2).stem
     
     try:
-        # Parse path lengths filter if provided
-        path_lengths = None
-        if args.path_lengths:
+        # Parse ancestor-count filter (--num-ancestors or deprecated --path-lengths)
+        ancestor_filter = None
+        depth_filter = None
+        raw_filter = args.num_ancestors or args.path_lengths
+        if raw_filter:
+            if not NX_AVAILABLE:
+                print("Error: --num-ancestors requires networkx.  pip install networkx")
+                return 1
             try:
-                path_lengths = [int(x.strip()) for x in args.path_lengths.split(',')]
-                print(f"Filtering samples to path lengths: {path_lengths}")
+                ancestor_filter = [int(x.strip()) for x in raw_filter.split(',')]
+                print(f"Filtering samples to ancestor counts: {ancestor_filter}")
             except ValueError:
-                print(f"Error: Invalid path lengths format: {args.path_lengths}")
-                print("Expected comma-separated integers, e.g., '3,4,5'")
+                print(f"Error: Invalid format: {raw_filter}")
+                print("Expected comma-separated integers, e.g., '3,5,8'")
+                return 1
+
+        # Parse ancestor-depth filter (--ancestor-depth)
+        if args.ancestor_depth:
+            if not NX_AVAILABLE:
+                print("Error: --ancestor-depth requires networkx.  pip install networkx")
+                return 1
+            try:
+                depth_filter = [int(x.strip()) for x in args.ancestor_depth.split(',')]
+                print(f"Filtering samples to ancestor depths: {depth_filter}")
+            except ValueError:
+                print(f"Error: Invalid format: {args.ancestor_depth}")
+                print("Expected comma-separated integers, e.g., '2,3,4'")
                 return 1
         
         # Parse first file
@@ -662,10 +677,14 @@ def main():
         samples2 = parse_completion_samples_file(args.file2)
         print(f"  Parsed {len(samples2)} samples")
         
-        # Apply path length filtering if specified
-        if path_lengths:
-            samples1 = filter_samples_by_path_length(samples1, path_lengths)
-            samples2 = filter_samples_by_path_length(samples2, path_lengths)
+        # Apply ancestor-count filtering if specified
+        if ancestor_filter:
+            samples1 = filter_samples_by_num_ancestors(samples1, ancestor_filter)
+            samples2 = filter_samples_by_num_ancestors(samples2, ancestor_filter)
+            print(f"  After filtering - File 1: {len(samples1)} samples, File 2: {len(samples2)} samples")
+        elif depth_filter:
+            samples1 = filter_samples_by_ancestor_depth(samples1, depth_filter)
+            samples2 = filter_samples_by_ancestor_depth(samples2, depth_filter)
             print(f"  After filtering - File 1: {len(samples1)} samples, File 2: {len(samples2)} samples")
         
         if len(samples1) == 0:
@@ -711,7 +730,8 @@ def main():
                 args.window_size, args.output,
                 x_label=args.x_label, y_label=args.y_label, title=args.title,
                 smoothing_window=args.smoothing,
-                raw_smoothing_window=args.raw_smoothing
+                raw_smoothing_window=args.raw_smoothing,
+                show_legend=not args.no_legend
             )
         elif not args.no_plot and not PLOTTING_AVAILABLE:
             print("Skipping plot generation (plotting libraries not available)")
