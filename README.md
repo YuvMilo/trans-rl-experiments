@@ -13,11 +13,12 @@ pip install -r requirements.txt
 ```
 
 The [real-world LLM experiments](#real-world-llm-experiments) use a Python 3.11
-virtualenv built from `requirements_real_world_llm.txt`. The
-[synthetic LLM experiments](#synthetic-llm-experiments) use a conda environment
-that their own `scripts/setup_env.sh` builds, because that install also needs a
-pinned upstream checkout, a CUDA-specific torch build, and a flash-attn wheel.
-Both are described in their own sections below.
+conda environment, `real_world_llm`, built from `requirements_real_world_llm.txt`.
+The [synthetic LLM experiments](#synthetic-llm-experiments) use a third conda
+environment, `interplay-rl`, that their own `scripts/setup_env.sh` builds,
+because that install also needs a pinned upstream checkout, a CUDA-specific
+torch build, and a flash-attn wheel. Both are described in their own sections
+below.
 
 ## Reproducing the Figures
 
@@ -136,11 +137,12 @@ depth 14.
 
 ### Environment
 
-The LLM experiments need their own Python 3.11 environment, separate from the
-`trans_rl` environment used above. Create it from the repository root:
+These experiments need their own conda environment, `real_world_llm`, separate
+from the `trans_rl` environment used above. Create it from the repository root:
 
 ```bash
-python -m venv .venv && source .venv/bin/activate     # Python 3.11
+conda create -n real_world_llm python=3.11
+conda activate real_world_llm
 pip install torch==2.10.0
 pip install -r requirements_real_world_llm.txt --no-build-isolation
 ```
@@ -420,7 +422,7 @@ active, since it kills every Ray process you own.
 │   ├── models/
 │   ├── dag_datasets/
 │   └── utils/
-├── real_world_llm_experiments/      # Equation-system GRPO, separate Python 3.11 env
+├── real_world_llm_experiments/      # Equation-system GRPO, conda env real_world_llm
 │   ├── run_r1_grpo_dag_v2.py        # GRPO training entry point; builds the dataset,
 │   │                                #   defines both rewards, runs GRPOTrainer
 │   ├── dag_dataset_simplified.py    # Graph and equation-system generator shared by
