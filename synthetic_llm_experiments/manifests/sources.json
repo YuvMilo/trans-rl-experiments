@@ -1,0 +1,15 @@
+{
+  "upstream_code": {
+    "repo_url": "https://github.com/Interplay-LM-Reasoning/Interplay-LM-Reasoning.git",
+    "revision": "40b9d29f0ea4f2dfb2f961fe754f4c7202873f3c"
+  },
+  "composition_dataset": {
+    "repo_id": "Interplay-LM-Reasoning/composition",
+    "revision": "a09d5c14c02bfa339143fb00a93274d1a84aa31d"
+  },
+  "base_model": {
+    "repo_id": "Interplay-LM-Reasoning/extrapolation_rl",
+    "revision": "4861bd030e6fb92d94be3a1cecab89c2fac4b94a",
+    "subdirectory": "id2-10_0.2easy_0.3medium_0.5hard/base"
+  }
+}

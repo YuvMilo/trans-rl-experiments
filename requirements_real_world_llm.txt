@@ -1,6 +1,7 @@
-# Python 3.11. Dependencies for the LLM experiments only; these are the exact
-# versions used for the reported runs. The theoretically analysed experiments
-# need an incompatible stack (Python 3.9, torch 2.5.1); see requirements.txt.
+# Python 3.11. Dependencies for the real-world LLM experiments only; these are
+# the exact versions used for the reported runs. The theoretically analysed
+# experiments need an incompatible stack (Python 3.9, torch 2.5.1); see
+# requirements.txt.
 #
 # TRL 1.2.0 prints a warning that it officially supports vLLM 0.11.0-0.18.0 and
 # that 0.19.1 is untested. The colocate path works correctly with 0.19.1; the
@@ -8,7 +9,7 @@
 #
 # flash-attn must be installed after torch (it compiles against it):
 #   pip install torch==2.10.0
-#   pip install -r requirements_llm.txt --no-build-isolation
+#   pip install -r requirements_real_world_llm.txt --no-build-isolation
 
 torch==2.10.0
 transformers==5.5.4

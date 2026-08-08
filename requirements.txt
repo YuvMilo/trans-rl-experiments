@@ -1,6 +1,7 @@
 # Python 3.9. Dependencies for the theoretically analysed experiments only.
-# The LLM experiments need an incompatible stack (Python 3.11, torch 2.10);
-# see requirements_llm.txt.
+# The real-world LLM experiments need an incompatible stack (Python 3.11, torch
+# 2.10); see requirements_real_world_llm.txt. The synthetic LLM experiments
+# build their own conda env; see synthetic_llm_experiments/scripts/setup_env.sh.
 
 torch==2.5.1
 numpy==1.26.4

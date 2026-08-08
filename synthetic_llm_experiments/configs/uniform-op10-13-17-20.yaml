@@ -1,0 +1,14 @@
+hydra:
+  searchpath:
+    - file://verl/trainer/config
+defaults:
+  - base
+  - _self_
+data:
+  train_files:
+    - new_version/data/composition/heldout/op10-137500.jsonl
+    - new_version/data/composition/heldout/op13-137500.jsonl
+    - new_version/data/composition/heldout/op17-137500.jsonl
+    - new_version/data/composition/heldout/op20-137500.jsonl
+trainer:
+  experiment_name: uniform-op10-13-17-20

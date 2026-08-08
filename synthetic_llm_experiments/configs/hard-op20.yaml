@@ -1,0 +1,11 @@
+hydra:
+  searchpath:
+    - file://verl/trainer/config
+defaults:
+  - base
+  - _self_
+data:
+  train_files:
+    - new_version/data/composition/heldout/op20-500k.jsonl
+trainer:
+  experiment_name: hard-op20
