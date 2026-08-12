@@ -25,7 +25,7 @@ PY="$("$CONDA_BIN" run -n "$ENV_NAME" which python)"
 "$PY" -m pip install -e "$RUNTIME/LLaMA-Factory"
 "$PY" -m pip install -e "$RUNTIME/verl[vllm]"
 "$PY" -m pip install \
-  huggingface_hub==0.36.2 transformers==4.54.1 vllm==0.9.1 ray==2.52.1
+  huggingface_hub==0.36.2 transformers==4.53.3 vllm==0.9.1 ray==2.52.1
 "$PY" -m pip install \
   "https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.4.post1/flash_attn-2.7.4.post1+cu12torch2.6cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
 "$PY" -m pip uninstall -y uvloop

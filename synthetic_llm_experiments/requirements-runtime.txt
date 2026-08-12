@@ -1,7 +1,9 @@
 huggingface_hub==0.36.2
 hf_transfer==0.1.9
 datasets==3.6.0
-transformers==4.54.1
+# transformers >=4.54 registers aimv2 natively, which collides with the
+# AutoConfig.register("aimv2") call in vllm<=0.10.0 and breaks `import vllm`.
+transformers==4.53.3
 accelerate==1.7.0
 vllm==0.9.1
 ray==2.52.1

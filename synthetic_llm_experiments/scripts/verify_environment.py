@@ -11,7 +11,7 @@ from packaging.version import Version
 
 EXPECTED = {
     "torch": "2.7.0",
-    "transformers": "4.54.1",
+    "transformers": "4.53.3",
     "vllm": "0.9.1",
     "ray": "2.52.1",
     "huggingface-hub": "0.36.2",

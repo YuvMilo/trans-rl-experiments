@@ -16,8 +16,13 @@ pip install -r requirements.txt
 conda create -n real_world_llm python=3.11
 conda activate real_world_llm
 pip install torch==2.10.0
+pip install numpy==2.2.6 psutil packaging ninja
 pip install -r requirements_real_world_llm.txt --no-build-isolation
 ```
+
+`flash-attn` compiles against the installed torch, so it is built with
+`--no-build-isolation`. That means its build-time imports (torch, numpy, psutil)
+must already be present, which is what the middle line installs.
 
 ```bash
 # 3. Synthetic LLM experiments

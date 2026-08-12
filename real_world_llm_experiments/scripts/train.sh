@@ -12,6 +12,7 @@
 #   CUDA_VISIBLE_DEVICES  GPUs to use                    (default 0-7)
 #   ACCEL_CFG             accelerate config              (default deepspeed_zero3)
 #   HF_TOKEN              required for gated models (Llama)
+#   HF_HUB_OFFLINE        set to 0 to let the ranks reach the Hub (default 1)
 #
 # The run log is written to logs/<config-name>-<timestamp>.log.
 set -euo pipefail
@@ -43,21 +44,46 @@ LOG="${LOG_DIR}/${CONFIG_NAME}-$(date +%Y%m%d_%H%M%S).log"
 
 MODEL="$(sed -n 's/^model_name_or_path:[[:space:]]*//p' "${CONFIG}" | head -n 1)"
 
-# Pre-download the weights on a single process. Without this, all ranks race to
-# populate the HF cache simultaneously and the run can die mid-download.
-echo "[info] warming HF cache for ${MODEL}..."
-MODEL="${MODEL}" python - <<'PY'
+# The conda toolchain ships a newer libstdc++ than the system one. Unless it is
+# loaded first, ICU aborts the vLLM import looking for CXXABI_1.3.15.
+if [[ -n "${CONDA_PREFIX:-}" && -f "${CONDA_PREFIX}/lib/libstdc++.so.6" ]]; then
+    export LD_PRELOAD="${CONDA_PREFIX}/lib/libstdc++.so.6${LD_PRELOAD:+:${LD_PRELOAD}}"
+fi
+
+# Pre-download the weights on a single process and resolve the repo to the local
+# snapshot it landed in. Without this, all ranks race to populate the HF cache
+# simultaneously and the run can die mid-download.
+if [[ -d "${MODEL}" ]]; then
+    MODEL_PATH="${MODEL}"
+    echo "[info] ${MODEL} is a local directory, skipping cache warm"
+else
+    echo "[info] warming HF cache for ${MODEL}..."
+    MODEL_PATH="$(MODEL="${MODEL}" python -c '
 import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.utils import cached_file
 model = os.environ["MODEL"]
 AutoTokenizer.from_pretrained(model)
 AutoModelForCausalLM.from_pretrained(model)
-print(f"[info] cache warmed for {model}")
-PY
+print(os.path.dirname(cached_file(model, "config.json")))
+' | tail -n 1)"
+    if [[ ! -d "${MODEL_PATH}" ]]; then
+        echo "[error] could not resolve a local snapshot for ${MODEL}" >&2
+        exit 1
+    fi
+fi
+
+# Hand the ranks the snapshot path rather than the repo id, and keep them off the
+# Hub entirely. Each rank otherwise re-resolves the repo on startup, and one
+# throttled reply out of eight is enough to kill the run. A path also skips the
+# snapshot completeness check vLLM runs when offline, which demands every file in
+# the repo -- including Llama's original/*.pth duplicate of the weights.
+export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 
 echo "============================================================"
 echo "[train] $(date '+%F %T')  config=${CONFIG}"
 echo "[train] model=${MODEL}"
+echo "[train] model_path=${MODEL_PATH}"
 echo "[train] gpus=${GPUS}  num_processes=${NUM_PROCS}"
 echo "[train] log -> ${LOG}"
 echo "============================================================"
@@ -67,7 +93,8 @@ accelerate launch \
     --config_file "${ACCEL_CFG}" \
     --num_processes "${NUM_PROCS}" \
     run_r1_grpo_dag_v2.py \
-    --config "${CONFIG}" 2>&1 | tee "${LOG}"
+    --config "${CONFIG}" \
+    --model_name_or_path "${MODEL_PATH}" 2>&1 | tee "${LOG}"
 
 status="${PIPESTATUS[0]}"
 echo "[train] $(date '+%F %T')  config=${CONFIG} exit=${status}"

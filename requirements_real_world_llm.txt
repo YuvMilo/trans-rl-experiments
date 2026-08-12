@@ -7,8 +7,12 @@
 # that 0.19.1 is untested. The colocate path works correctly with 0.19.1; the
 # warning can be ignored.
 #
-# flash-attn must be installed after torch (it compiles against it):
+# flash-attn compiles against the installed torch, so it must be built with
+# --no-build-isolation. That skips pip's temporary build environment, so every
+# module flash-attn imports at build time (torch, numpy, psutil) has to be
+# installed beforehand; ninja just makes the compile much faster:
 #   pip install torch==2.10.0
+#   pip install numpy==2.2.6 psutil packaging ninja
 #   pip install -r requirements_real_world_llm.txt --no-build-isolation
 
 torch==2.10.0
