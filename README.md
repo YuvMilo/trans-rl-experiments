@@ -39,11 +39,18 @@ conda activate interplay-rl
 Run from the repository root in `trans_rl`. Each script accepts `--linear`
 (default) or `--softmax`.
 
-| Experiment | Command |
-| --- | --- |
-| Emergence of efficient reasoning | `python theoretically_inspired/exp_train_on_D.py --linear` |
-| Out-of-distribution generalization | `python theoretically_inspired/exp_train_on_D_m.py --linear` |
-| Complex tasks require simple tasks | `python theoretically_inspired/exp_vanish_grad.py --linear` |
+Run one experiment at a time:
+
+```bash
+# Emergence of efficient reasoning
+python theoretically_inspired/exp_train_on_D.py --linear
+
+# Out-of-distribution generalization
+python theoretically_inspired/exp_train_on_D_m.py --linear
+
+# Complex tasks require simple tasks
+python theoretically_inspired/exp_vanish_grad.py --linear
+```
 
 Results go to `result/theoretically_inspired/<script>_linear/` for `--linear`
 and `result/theoretically_inspired/<script>/` for `--softmax`.
