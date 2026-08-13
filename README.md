@@ -159,3 +159,21 @@ Run one experiment at a time:
 Logs go to `logs/` and checkpoints to `checkpoints/<experiment>/`. GPUs 0-3 are
 used by default; override with `CUDA_VISIBLE_DEVICES=0,2,4,6`. The launcher
 refuses a nonempty checkpoint directory unless you pass `ALLOW_EXISTING=1`.
+
+---
+
+## Credits
+
+The real-world LLM experiments started from Phil Schmid's
+[Mini-R1: Reproduce Deepseek R1 "aha moment"](https://github.com/philschmid/deep-learning-pytorch-huggingface/blob/main/training/mini-deepseek-r1-aha-grpo.ipynb)
+tutorial and the
+[`run_r1_grpo.py`](https://github.com/philschmid/deep-learning-pytorch-huggingface/blob/main/training/scripts/run_r1_grpo.py)
+script it ships.
+The synthetic LLM experiments build on
+[Interplay-LM-Reasoning](https://github.com/Interplay-LM-Reasoning/Interplay-LM-Reasoning).
+`bootstrap.sh` checks out revision `40b9d29`, and the runs use their
+[composition](https://huggingface.co/datasets/Interplay-LM-Reasoning/composition)
+dataset and
+[extrapolation_rl](https://huggingface.co/Interplay-LM-Reasoning/extrapolation_rl)
+base model. All three pinned revisions are recorded in
+`synthetic_llm_experiments/manifests/sources.json`.
