@@ -5,14 +5,8 @@ BUNDLE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME="${RUNTIME_DIR:-$BUNDLE/.runtime}"
 EXPERIMENTS=(
   hard-op20
-  uniform-op10-15
   uniform-op10-17
   uniform-op10-20
-  uniform-op10-15-20
-  uniform-op10-13-17-20
-  uniform-op17-20
-  uniform-op18-20
-  uniform-op5-10-15-20
 )
 
 usage() {

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Evaluate every checkpoint of a model family against every test distribution.
 #
-# Matrix (4 checkpoints x 4 distributions):
-#   Checkpoints:   5-uniform, 10-uniform, 15-uniform, 15-hard
-#   Distributions: 5-uniform, 10-uniform, 15-uniform, 15-hard
+# Matrix (3 checkpoints x 3 distributions):
+#   Checkpoints:   10-uniform, 15-uniform, 15-hard
+#   Distributions: 10-uniform, 15-uniform, 15-hard
 #
 # By convention:
 #   n-uniform => min_ancestor_depth=1, max_ancestor_depth=n
@@ -66,7 +66,6 @@ MODEL_KEYS=(
     "15_hard"
     "10_uniform"
     "15_uniform"
-    "5_uniform"
 )
 
 # Test distributions. Format: "<dist_name>:<n_nodes>:<mode>", mode in {uniform, hard}.
@@ -74,11 +73,10 @@ EVAL_DISTS=(
     "15_hard:15:hard"
     "10_uniform:10:uniform"
     "15_uniform:15:uniform"
-    "5_uniform:5:uniform"
 )
 
 model_path_for() {
-    # 5_uniform -> runs/<family>-5-uniform
+    # 10_uniform -> runs/<family>-10-uniform
     local key="$1"
     echo "${RUNS_DIR}/${FAMILY}-${key//_/-}"
 }

@@ -19,16 +19,12 @@ cd "${REPO_ROOT}"
 FAMILY="${1:-all}"
 
 QWEN_CONFIGS=(
-    configs/qwen-5-uniform.yaml
     configs/qwen-10-uniform.yaml
     configs/qwen-15-uniform.yaml
     configs/qwen-15-hard.yaml
-    configs/qwen-15-mix-13-15.yaml
-    configs/qwen-15-mix-5-10-15.yaml
 )
 
 LLAMA_CONFIGS=(
-    configs/llama-5-uniform.yaml
     configs/llama-10-uniform.yaml
     configs/llama-15-uniform.yaml
     configs/llama-15-hard.yaml

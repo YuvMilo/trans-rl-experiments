@@ -20,10 +20,6 @@ pip install numpy==2.2.6 psutil packaging ninja
 pip install -r requirements_real_world_llm.txt --no-build-isolation
 ```
 
-`flash-attn` compiles against the installed torch, so it is built with
-`--no-build-isolation`. That means its build-time imports (torch, numpy, psutil)
-must already be present, which is what the middle line installs.
-
 ```bash
 # 3. Synthetic LLM experiments
 cd synthetic_llm_experiments
@@ -84,13 +80,9 @@ Or one config at a time:
 
 | Config | Model | Nodes | Training distribution |
 | --- | --- | --- | --- |
-| `configs/qwen-5-uniform.yaml` | Qwen2.5-3B-Instruct | 5 | 5-uniform |
 | `configs/qwen-10-uniform.yaml` | Qwen2.5-3B-Instruct | 10 | 10-uniform |
 | `configs/qwen-15-uniform.yaml` | Qwen2.5-3B-Instruct | 15 | 15-uniform |
 | `configs/qwen-15-hard.yaml` | Qwen2.5-3B-Instruct | 15 | 15-hard |
-| `configs/qwen-15-mix-13-15.yaml` | Qwen2.5-3B-Instruct | 15 | depths 13-15 |
-| `configs/qwen-15-mix-5-10-15.yaml` | Qwen2.5-3B-Instruct | 15 | depths {5, 10, 15} |
-| `configs/llama-5-uniform.yaml` | Llama-3.2-3B-Instruct | 5 | 5-uniform |
 | `configs/llama-10-uniform.yaml` | Llama-3.2-3B-Instruct | 10 | 10-uniform |
 | `configs/llama-15-uniform.yaml` | Llama-3.2-3B-Instruct | 15 | 15-uniform |
 | `configs/llama-15-hard.yaml` | Llama-3.2-3B-Instruct | 15 | 15-hard |
@@ -141,20 +133,14 @@ wandb login
 Run one experiment at a time:
 
 ```bash
-./run.sh uniform-op10-13-17-20
+./run.sh uniform-op10-20
 ```
 
 | Experiment | Operation counts | Training rows |
 | --- | --- | --- |
 | `hard-op20` | 20 | 500,000 |
-| `uniform-op10-15` | 10-15 | 300,000 |
 | `uniform-op10-17` | 10-17 | 400,000 |
 | `uniform-op10-20` | 10-20 | 550,000 |
-| `uniform-op10-15-20` | 10, 15, 20 | 412,500 |
-| `uniform-op10-13-17-20` | 10, 13, 17, 20 | 550,000 |
-| `uniform-op17-20` | 17-20 | 550,000 |
-| `uniform-op18-20` | 18-20 | 412,500 |
-| `uniform-op5-10-15-20` | 5, 10, 15, 20 | 550,000 |
 
 Logs go to `logs/` and checkpoints to `checkpoints/<experiment>/`. GPUs 0-3 are
 used by default; override with `CUDA_VISIBLE_DEVICES=0,2,4,6`. The launcher

@@ -6,14 +6,8 @@ RUNTIME="${RUNTIME_DIR:-$BUNDLE/.runtime}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 EXPERIMENTS=(
   hard-op20
-  uniform-op10-15
   uniform-op10-17
   uniform-op10-20
-  uniform-op10-15-20
-  uniform-op10-13-17-20
-  uniform-op17-20
-  uniform-op18-20
-  uniform-op5-10-15-20
 )
 
 bash -n "$BUNDLE/bootstrap.sh" "$BUNDLE/run.sh" "$BUNDLE/scripts/"*.sh
