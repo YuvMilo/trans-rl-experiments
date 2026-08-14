@@ -56,7 +56,22 @@ and `result/theoretically_inspired/<script>/` for `--softmax`.
 ## 2. Real-world LLM experiments
 
 Needs 8 GPUs with at least 48GB each. Run from `real_world_llm_experiments/` in
-`real_world_llm`. The Llama weights are gated:
+`real_world_llm`.
+
+`Qwen/Qwen2.5-3B-Instruct` downloads without credentials, but
+`meta-llama/Llama-3.2-3B-Instruct` is gated, so the `llama` runs need an
+approved Hugging Face account:
+
+1. Sign in and open
+   [meta-llama/Llama-3.2-3B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct).
+2. Fill in the "LLAMA 3.2 COMMUNITY LICENSE AGREEMENT" form on the model card
+   and submit it. Requests are reviewed by Meta, usually within a few hours.
+3. Once the card shows you have been granted access, create a token with `read`
+   permission at
+   [Settings → Access Tokens](https://huggingface.co/settings/tokens).
+
+Export that token before training; `scripts/train.sh` uses it to warm the
+Hugging Face cache before the ranks start.
 
 ```bash
 export HF_TOKEN=hf_...
